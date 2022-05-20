@@ -8,7 +8,7 @@ namespace Project_9
 
     class Program
     {
-        static ITelegramBotClient bot = new TelegramBotClient("5317518652:AAE69hx6ltXEHOfXm7EsHFnXYkd0g-O48vk");
+        static ITelegramBotClient bot = new TelegramBotClient("*************************************************");
         public static async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
         {
             // Некоторые действия
