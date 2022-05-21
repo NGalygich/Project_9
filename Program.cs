@@ -38,8 +38,7 @@ class Program
                 await botClient.SendTextMessageAsync(message.Chat, "Файл загружен");
                 return;
             }
-            /*
-            else if (message.Audio != null)
+            if (message.Audio != null)
             {
                 Console.WriteLine($"<<File ID>> = {message.Audio.FileId}");
                 var file = await bot.GetFileAsync(message.Audio.FileId);
@@ -50,8 +49,7 @@ class Program
                 await botClient.SendTextMessageAsync(message.Chat, "Аудио файл загружен");
                 return;
             }
-            */
-            await botClient.SendTextMessageAsync(message.Chat, "Я не умею общаться. Только скачивать и выгружать файлы. /start");
+            await botClient.SendTextMessageAsync(message.Chat, "Я не умею общаться. Только скачивать и выгружать файлы.");
         }
     }
 
