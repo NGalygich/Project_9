@@ -8,7 +8,8 @@ namespace Project_9
 
     class Program
     {
-        static ITelegramBotClient bot = new TelegramBotClient("5317518652:AAE69hx6ltXEHOfXm7EsHFnXYkd0g-O48vk");
+        //public string path1 = @"C:\Users\nikit\Desktop\SkillBox";
+        static ITelegramBotClient bot = new TelegramBotClient("TOKEN");
         public static async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
         {
             // Некоторые действия
@@ -32,6 +33,8 @@ namespace Project_9
                 if (message.Text.ToLower() == "/save")
                 {
                     await botClient.SendTextMessageAsync(message.Chat, "Сохранить файл;");
+                    DownLoad(message.Document.FileId, message.Document.FileName);
+
                     return;
                 }
                  if (message.Text.ToLower() == "/download")
@@ -49,9 +52,17 @@ namespace Project_9
             Console.WriteLine(Newtonsoft.Json.JsonConvert.SerializeObject(exception));
         }
 
+        static async void DownLoad(string fileId, string path){
+            var file = await bot.GetFileAsync(fileId);
+            FileStream fs = new FileStream("_" + path, FileMode.Create);
+            await bot.DownloadFileAsync(file.FilePath, fs);
+            fs.Close();
+            fs.Dispose();
+        }
 
         static void Main(string[] args)
         {
+            
             Console.WriteLine("Запущен бот " + bot.GetMeAsync().Result.FirstName);
 
             var cts = new CancellationTokenSource();
@@ -62,5 +73,7 @@ namespace Project_9
             bot.StartReceiving(HandleUpdateAsync, HandleErrorAsync, receiverOptions, cancellationToken);
             Console.ReadLine();
         }
+
+        
     }
 }
