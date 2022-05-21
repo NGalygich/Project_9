@@ -17,7 +17,7 @@ class Program
         if(update.Type == Telegram.Bot.Types.Enums.UpdateType.Message)
         {
             var message = update.Message;
-            /*
+
             if (message.Text.ToLower() == "/start")
             {
                 await botClient.SendTextMessageAsync(message.Chat, "Выберите действие:");
@@ -26,7 +26,6 @@ class Program
                 await botClient.SendTextMessageAsync(message.Chat, "Просмотреть файлы на сервере /view");
                 return;
             }
-            */
             if (message.Document != null)
             {
                 Console.WriteLine($"<<File ID>> = {message.Document.FileId}");
@@ -38,7 +37,7 @@ class Program
                 await botClient.SendTextMessageAsync(message.Chat, "Файл загружен");
                 return;
             }
-            else if (message.Audio != null)
+            if (message.Audio != null)
             {
                 Console.WriteLine($"<<File ID>> = {message.Audio.FileId}");
                 var file = await bot.GetFileAsync(message.Audio.FileId);
