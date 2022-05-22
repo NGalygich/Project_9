@@ -8,7 +8,7 @@ class Program
 {
     static string token = System.IO.File.ReadAllText(@"C:\Users\nikit\Desktop\SkillBox\token.txt");
     static string path = @"C:\Users\nikit\Desktop\SkillBox\Archive\";
-    static bool flag;
+    static bool flag = false;
     static ITelegramBotClient bot = new TelegramBotClient(token);
     
     public static async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
@@ -22,7 +22,9 @@ class Program
             {
                 await botClient.SendTextMessageAsync(message.Chat, "Выберите действие:");
                 await botClient.SendTextMessageAsync(message.Chat, "Загрузить файл на сревер /input");
-                await botClient.SendTextMessageAsync(message.Chat, "Выгрузить файл с сервера /output");
+                //await botClient.SendTextMessageAsync(message.Chat, "Выгрузить файл с сервера /output_audio");
+                //await botClient.SendTextMessageAsync(message.Chat, "Выгрузить файл с сервера /output_photo");
+                //await botClient.SendTextMessageAsync(message.Chat, "Выгрузить файл с сервера /output_video");
                 await botClient.SendTextMessageAsync(message.Chat, "Просмотреть файлы на сервере /view");
                 return;
             }
@@ -34,8 +36,10 @@ class Program
                 }
                 return;
             }
-            else if ((message.Text != null) && (message.Text.ToLower() == "/output"))
+            else if ((message.Text != null) && (message.Text.ToLower() == "/output")){
                 flag = true;
+                return;
+            }  
             else if ((message.Text != null) && (flag == false))
                 await botClient.SendTextMessageAsync(message.Chat, "Я не умею общаться. Только скачивать и выгружать файлы.");
             
@@ -64,23 +68,32 @@ class Program
                 //await System.IO.File.WriteAllTextAsync(path_contents, "/" + message.Audio.FileName);
                 return;
             }
-            if (message.Text != null){
-                string fileNameInput = "maxresdefault.jpg";
-                string filePath = path + fileNameInput;
-                using (var form = new MultipartFormDataContent())
-                {
-                    form.Add(new StringContent(message.Chat.Id.ToString(), Encoding.UTF8), "chat_id");
-                    using (var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read))
+            if ((message.Text != null) && (flag == true)){
+                string fileNameInput = message.Text;
+                string[] dir = Directory.GetFiles(path);
+                foreach (string el in dir){
+                    if (message.Text == el.Substring(path.Length))
                     {
-                        form.Add(new StreamContent(fileStream), "photo", filePath.Split('\\').Last());
-                        using (var client = new HttpClient())
+                        string filePath = path + fileNameInput;
+                        using (var form = new MultipartFormDataContent())
                         {
-                            await client.PostAsync($"https://api.telegram.org/bot{token}/sendPhoto", form);
-                            Console.WriteLine("Файл отправлен успешно!");
+                            form.Add(new StringContent(message.Chat.Id.ToString(), Encoding.UTF8), "chat_id");
+                            using (var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read))
+                            {   
+                                form.Add(new StreamContent(fileStream), "document", filePath.Split('\\').Last());
+                                using (var client = new HttpClient())
+                                {
+                                    await client.PostAsync($"https://api.telegram.org/bot{token}/sendDocument", form);
+                                    Console.WriteLine("Файл отправлен успешно!");
+                                }
+                            }
+                            flag = false;
+                            break;
                         }
-                    }
-                    flag = false;
+                    } 
                 }
+                if (flag == true) await botClient.SendTextMessageAsync(message.Chat, "Выбраный файл не найден. Попробуйте ввести еще раз.");
+                return;
             }
         }
     }
