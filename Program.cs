@@ -7,17 +7,17 @@ namespace Project_9;
 class Program
 {
     static string token = System.IO.File.ReadAllText(@"C:\Users\nikit\Desktop\SkillBox\token.txt");
-    static string path = @"C:\Users\nikit\Desktop\SkillBox\Archive";
+    static string path = @"C:\Users\nikit\Desktop\SkillBox\Archive\";
+    static bool flag;
     static ITelegramBotClient bot = new TelegramBotClient(token);
     
-
     public static async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
     {
         Console.WriteLine(Newtonsoft.Json.JsonConvert.SerializeObject(update));
         if(update.Type == Telegram.Bot.Types.Enums.UpdateType.Message)
         {
             var message = update.Message;
-            
+
             if ((message.Text != null) && (message.Text.ToLower() == "/start"))
             {
                 await botClient.SendTextMessageAsync(message.Chat, "Выберите действие:");
@@ -26,12 +26,18 @@ class Program
                 await botClient.SendTextMessageAsync(message.Chat, "Просмотреть файлы на сервере /view");
                 return;
             }
-            if ((message.Text != null) && (message.Text.ToLower() == "/view"))
+            else if ((message.Text != null) && (message.Text.ToLower() == "/view"))
             {
                 string[] dir = Directory.GetFiles(path);
-                foreach (string el in dir)
-                    await botClient.SendTextMessageAsync(message.Chat, el.Substring(path.Length+1));
+                foreach (string el in dir){
+                    await botClient.SendTextMessageAsync(message.Chat, el.Substring(path.Length));
+                }
+                return;
             }
+            else if ((message.Text != null) && (message.Text.ToLower() == "/output"))
+                flag = true;
+            else if ((message.Text != null) && (flag == false))
+                await botClient.SendTextMessageAsync(message.Chat, "Я не умею общаться. Только скачивать и выгружать файлы.");
             
             if (message.Document != null)
             {
@@ -42,6 +48,7 @@ class Program
                 fs.Close();
                 fs.Dispose();
                 await botClient.SendTextMessageAsync(message.Chat, "Файл загружен");
+                //await System.IO.File.WriteAllTextAsync(path_contents, "/" + message.Document.FileName);
                 return;
             }
             
@@ -54,25 +61,27 @@ class Program
                 fs.Close();
                 fs.Dispose();
                 await botClient.SendTextMessageAsync(message.Chat, "Аудио файл загружен");
+                //await System.IO.File.WriteAllTextAsync(path_contents, "/" + message.Audio.FileName);
                 return;
             }
-            string fileNameInput = "maxresdefault.jpg";
-            string filePath = path + fileNameInput;
-            using (var form = new MultipartFormDataContent())
-            {
-                form.Add(new StringContent(message.Chat.Id.ToString(), Encoding.UTF8), "chat_id");
-                using (var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read))
+            if (message.Text != null){
+                string fileNameInput = "maxresdefault.jpg";
+                string filePath = path + fileNameInput;
+                using (var form = new MultipartFormDataContent())
                 {
-                    form.Add(new StreamContent(fileStream), "photo", filePath.Split('\\').Last());
-                    using (var client = new HttpClient())
+                    form.Add(new StringContent(message.Chat.Id.ToString(), Encoding.UTF8), "chat_id");
+                    using (var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read))
                     {
-                        await client.PostAsync($"https://api.telegram.org/bot{token}/sendPhoto", form);
-                        Console.WriteLine("Файл отправлен успешно!");
+                        form.Add(new StreamContent(fileStream), "photo", filePath.Split('\\').Last());
+                        using (var client = new HttpClient())
+                        {
+                            await client.PostAsync($"https://api.telegram.org/bot{token}/sendPhoto", form);
+                            Console.WriteLine("Файл отправлен успешно!");
+                        }
                     }
+                    flag = false;
                 }
             }
-           
-            await botClient.SendTextMessageAsync(message.Chat, "Я не умею общаться. Только скачивать и выгружать файлы.");
         }
     }
 
