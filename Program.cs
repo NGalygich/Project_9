@@ -8,7 +8,9 @@ class Program
 {
     static string token = System.IO.File.ReadAllText(@"C:\Users\nikit\Desktop\SkillBox\token.txt");
     static string path = @"C:\Users\nikit\Desktop\SkillBox\Archive\";
-    static bool flag = false;
+    static bool flag = false, flagVideo = false;
+    static string type1;
+    static string type2;
     static ITelegramBotClient bot = new TelegramBotClient(token);
     
     public static async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
@@ -21,10 +23,10 @@ class Program
             if ((message.Text != null) && (message.Text.ToLower() == "/start"))
             {
                 await botClient.SendTextMessageAsync(message.Chat, "Выберите действие:");
-                await botClient.SendTextMessageAsync(message.Chat, "Загрузить файл на сревер /input");
+                await botClient.SendTextMessageAsync(message.Chat, "Загрузить файл на сревер /output");
                 //await botClient.SendTextMessageAsync(message.Chat, "Выгрузить файл с сервера /output_audio");
                 //await botClient.SendTextMessageAsync(message.Chat, "Выгрузить файл с сервера /output_photo");
-                //await botClient.SendTextMessageAsync(message.Chat, "Выгрузить файл с сервера /output_video");
+                await botClient.SendTextMessageAsync(message.Chat, "Выгрузить файл с сервера /output_video");
                 await botClient.SendTextMessageAsync(message.Chat, "Просмотреть файлы на сервере /view");
                 return;
             }
@@ -37,6 +39,12 @@ class Program
                 return;
             }
             else if ((message.Text != null) && (message.Text.ToLower() == "/output")){
+                flagVideo = false;
+                flag = true;
+                return;
+            }  
+            else if ((message.Text != null) && (message.Text.ToLower() == "/output_video")){
+                flagVideo = true;
                 flag = true;
                 return;
             }  
@@ -69,6 +77,14 @@ class Program
                 return;
             }
             if ((message.Text != null) && (flag == true)){
+                 if (flagVideo == true){
+                    type1 = "video";
+                    type2 = "Video";
+                }
+                else {
+                    type1 = "document";
+                    type1 = "Document";
+                }
                 string fileNameInput = message.Text;
                 string[] dir = Directory.GetFiles(path);
                 foreach (string el in dir){
@@ -80,14 +96,15 @@ class Program
                             form.Add(new StringContent(message.Chat.Id.ToString(), Encoding.UTF8), "chat_id");
                             using (var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read))
                             {   
-                                form.Add(new StreamContent(fileStream), "document", filePath.Split('\\').Last());
+                                form.Add(new StreamContent(fileStream), type1, filePath.Split('\\').Last());
                                 using (var client = new HttpClient())
                                 {
-                                    await client.PostAsync($"https://api.telegram.org/bot{token}/sendDocument", form);
+                                    await client.PostAsync($"https://api.telegram.org/bot{token}/send{type2}", form);
                                     Console.WriteLine("Файл отправлен успешно!");
                                 }
                             }
                             flag = false;
+                            flagVideo = false;
                             break;
                         }
                     } 
@@ -104,7 +121,7 @@ class Program
     }
 
 
-    static void Main(string[] args)
+    static void Main()
     {
         Console.WriteLine("Запущен бот " + bot.GetMeAsync().Result.FirstName);
 
@@ -116,7 +133,6 @@ class Program
         };
 
         bot.StartReceiving(HandleUpdateAsync,HandleErrorAsync,receiverOptions,cancellationToken);
-        //bot.StartReceiving(HandleUpdateAsync,HandleErrorAsync,receiverOptions,cancellationToken);
         
         Console.ReadLine();
     }
