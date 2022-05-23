@@ -23,10 +23,8 @@ class Program
             if ((message.Text != null) && (message.Text.ToLower() == "/start"))
             {
                 await botClient.SendTextMessageAsync(message.Chat, "Выберите действие:");
-                await botClient.SendTextMessageAsync(message.Chat, "Загрузить файл на сревер /output");
-                //await botClient.SendTextMessageAsync(message.Chat, "Выгрузить файл с сервера /output_audio");
-                //await botClient.SendTextMessageAsync(message.Chat, "Выгрузить файл с сервера /output_photo");
-                await botClient.SendTextMessageAsync(message.Chat, "Выгрузить файл с сервера /output_video");
+                await botClient.SendTextMessageAsync(message.Chat, "Выгрузить файл (кроме видео) c сревера /output");
+                await botClient.SendTextMessageAsync(message.Chat, "Выгрузить видео с сервера /output_video");
                 await botClient.SendTextMessageAsync(message.Chat, "Просмотреть файлы на сервере /view");
                 return;
             }
@@ -60,7 +58,6 @@ class Program
                 fs.Close();
                 fs.Dispose();
                 await botClient.SendTextMessageAsync(message.Chat, "Файл загружен");
-                //await System.IO.File.WriteAllTextAsync(path_contents, "/" + message.Document.FileName);
                 return;
             }
             
@@ -73,7 +70,6 @@ class Program
                 fs.Close();
                 fs.Dispose();
                 await botClient.SendTextMessageAsync(message.Chat, "Аудио файл загружен");
-                //await System.IO.File.WriteAllTextAsync(path_contents, "/" + message.Audio.FileName);
                 return;
             }
             if ((message.Text != null) && (flag == true)){
@@ -83,7 +79,7 @@ class Program
                 }
                 else {
                     type1 = "document";
-                    type1 = "Document";
+                    type2 = "Document";
                 }
                 string fileNameInput = message.Text;
                 string[] dir = Directory.GetFiles(path);
@@ -100,7 +96,7 @@ class Program
                                 using (var client = new HttpClient())
                                 {
                                     await client.PostAsync($"https://api.telegram.org/bot{token}/send{type2}", form);
-                                    Console.WriteLine("Файл отправлен успешно!");
+                                    Console.WriteLine($"Файл отправлен успешно!");
                                 }
                             }
                             flag = false;
@@ -114,13 +110,10 @@ class Program
             }
         }
     }
-
     public static async Task HandleErrorAsync(ITelegramBotClient botClient, Exception exception, CancellationToken cancellationToken)
     {
         Console.WriteLine(Newtonsoft.Json.JsonConvert.SerializeObject(exception));
     }
-
-
     static void Main()
     {
         Console.WriteLine("Запущен бот " + bot.GetMeAsync().Result.FirstName);
